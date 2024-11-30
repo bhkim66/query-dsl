@@ -8,6 +8,6 @@ import java.util.List;
 public interface MemberJpaCustom {
     List<MemberTeamDto> searchByBuilder(MemberSearchCondition condition);
 
-    List<MemberTeamDto> searchByWhereParameter(MemberSearchCondition condition);
+    List<MemberTeamDto> search(MemberSearchCondition condition);
 }
 

@@ -54,7 +54,7 @@ public class MemberJapCustomImpl implements MemberJpaCustom {
     }
 
     @Override
-    public List<MemberTeamDto> searchByWhereParameter(MemberSearchCondition condition) {
+    public List<MemberTeamDto> search(MemberSearchCondition condition) {
         return queryFactory
                 .select(Projections.constructor(
                         MemberTeamDto.class,
@@ -76,11 +76,11 @@ public class MemberJapCustomImpl implements MemberJpaCustom {
     }
 
     private BooleanExpression userNameEq(String username) {
-        return username.isEmpty() ? null : member.username.eq(username);
+        return username.isBlank() ? null : member.username.eq(username);
     }
 
     private BooleanExpression teamNameEq(String teamName) {
-        return teamName.isEmpty() ? null : member.team.name.eq(teamName);
+        return teamName.isBlank() ? null : member.team.name.eq(teamName);
     }
 
     private BooleanExpression ageGoe(Integer ageGoe) {
