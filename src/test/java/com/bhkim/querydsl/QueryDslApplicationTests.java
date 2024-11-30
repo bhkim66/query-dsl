@@ -1,10 +1,9 @@
-package com.bhkim.queryDsl;
+package com.bhkim.querydsl;
 
-import com.bhkim.queryDsl.entity.Hello;
-import com.bhkim.queryDsl.entity.QHello;
+import com.bhkim.querydsl.entity.Hello;
+import com.bhkim.querydsl.entity.QHello;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,24 +15,25 @@ import static org.assertj.core.api.Assertions.*;
 @Transactional
 class QueryDslApplicationTests {
 
-	@Autowired
-	EntityManager em;
+    @Autowired
+    EntityManager em;
 
-	@Test
-	void contextLoads() {
-		Hello hello = new Hello();
-		em.persist(hello);
+    JPAQueryFactory query;
 
-		JPAQueryFactory query = new JPAQueryFactory(em);
-		QHello qHello = QHello.hello;
+    @Test
+    void contextLoads() {
+        Hello hello = new Hello();
+        em.persist(hello);
 
-		Hello result = query.selectFrom(qHello).fetchOne();
+        JPAQueryFactory query = new JPAQueryFactory(em);
+        QHello qHello = QHello.hello;
 
-		assertThat(result).isEqualTo(hello);
-		//lombok 동작 확인 (hello.getId())
-		assertThat(result.getId()).isEqualTo(hello.getId());
+        Hello result = query.selectFrom(qHello).fetchOne();
 
-	}
+        assertThat(result).isEqualTo(hello);
+        //lombok 동작 확인 (hello.getId())
+        assertThat(result.getId()).isEqualTo(hello.getId());
 
+    }
 
 }

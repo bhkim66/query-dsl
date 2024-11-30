@@ -1,5 +1,9 @@
-package com.bhkim.queryDsl.entity;
+package com.bhkim.querydsl.entity;
 
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,9 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.bhkim.queryDsl.entity.QMember.*;
+import static com.bhkim.querydsl.entity.QMember.*;
+import static com.querydsl.jpa.JPAExpressions.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -62,4 +66,100 @@ class MemberTest {
                 .fetchOne();
         assertThat(member1.getUsername()).isEqualTo("member1");
     }
+
+
+    @Test
+    void subQuery() throws Exception {
+        //given
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory.selectFrom(member)
+                .where(member.age.eq(
+                        select(memberSub.age.max())
+                                .from(memberSub)
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age")
+                .containsExactly(40);
+
+
+        //when
+
+        //then
+    }
+
+    @Test
+    void selectSubQuery() throws Exception {
+        QMember memberSub = new QMember("memberSub");
+        List<Tuple> fetch = queryFactory.select(member.username,
+                        select(memberSub.age.avg())
+                                .from(memberSub)
+                )
+                .from(member)
+                .fetch();
+        for (Tuple tuple : fetch) {
+            System.out.println("username = " + tuple.get(member.username));
+            System.out.println("age = " + tuple.get(select(memberSub.age.avg())
+                            .from(memberSub)));
+        }
+    }
+
+    @Test
+    void complexCase() throws Exception {
+        List<String> result = queryFactory.select(new CaseBuilder()
+                        .when(member.age.between(0, 20)).then("0 ~ 20살 입니다")
+                        .when(member.age.between(20, 30)).then("20 ~ 30살 입니다")
+                        .otherwise("기타")
+                ).from(member)
+                .fetch();
+    }
+
+    @Test
+    void complexCase2() throws Exception {
+        NumberExpression<Integer> rankPath = new CaseBuilder()
+                .when(member.age.between(0, 20)).then(2)
+                .when(member.age.between(20, 30)).then(1)
+                .otherwise(3);
+
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .orderBy(rankPath.desc())
+                .fetch();
+
+        for (Member member : fetch) {
+            System.out.println("member = " + member);
+        }
+    }
+
+    @Test
+    public void 동적쿼리_WhereParam() throws Exception {
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+        List<Member> result = searchMember2(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMember2(String usernameParam, Integer ageParam) {
+        return queryFactory
+                .selectFrom(member)
+                .where(usernameEq(usernameParam), ageEq(ageParam))
+//                .where(allEq(usernameParam, ageParam)) 조합 가능
+                .fetch();
+    }
+
+    private BooleanExpression usernameEq(String usernameParam) {
+        return usernameParam != null ? member.username.eq(usernameParam) : null;
+    }
+
+    private BooleanExpression ageEq(Integer ageParam) {
+        return ageParam != null ? member.age.eq(ageParam) : null;
+    }
+
+    private BooleanExpression allEq(String usernameParam, Integer ageParam) {
+        return usernameEq(usernameParam).and(ageEq(ageParam));
+    }
+
+
+
 }

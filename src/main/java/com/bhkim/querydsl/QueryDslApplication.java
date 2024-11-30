@@ -1,4 +1,4 @@
-package com.bhkim.queryDsl;
+package com.bhkim.querydsl;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

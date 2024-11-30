@@ -1,4 +1,4 @@
-package com.bhkim.queryDsl.entity;
+package com.bhkim.querydsl.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

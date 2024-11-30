@@ -3,7 +3,7 @@ package com.bhkim.querydsl.dto;
 import lombok.Data;
 
 @Data
-public class MemberCondition {
+public class MemberSearchCondition {
     private String username;
     private String teamName;
     private Integer ageGoe;
