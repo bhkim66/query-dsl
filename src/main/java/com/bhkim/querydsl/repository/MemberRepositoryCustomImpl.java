@@ -3,22 +3,27 @@ package com.bhkim.querydsl.repository;
 import com.bhkim.querydsl.dto.MemberSearchCondition;
 import com.bhkim.querydsl.dto.MemberTeamDto;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.Predicate;
+import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.support.PageableExecutionUtils;
 
 import java.util.List;
 
 import static com.bhkim.querydsl.entity.QMember.member;
 import static com.bhkim.querydsl.entity.QTeam.team;
+import static io.micrometer.common.util.StringUtils.isBlank;
 import static org.springframework.util.StringUtils.hasText;
-import static org.springframework.util.StringUtils.isEmpty;
 
 @RequiredArgsConstructor
-public class MemberJapCustomImpl implements MemberJpaCustom {
-    final JPAQueryFactory queryFactory;
+public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
+    private final JPAQueryFactory queryFactory;
 
     @Override
     public List<MemberTeamDto> searchByBuilder(MemberSearchCondition condition) {
@@ -49,8 +54,6 @@ public class MemberJapCustomImpl implements MemberJpaCustom {
                 .leftJoin(member.team, team)
                 .where(builder)
                 .fetch();
-
-
     }
 
     @Override
@@ -75,12 +78,44 @@ public class MemberJapCustomImpl implements MemberJpaCustom {
                 .fetch();
     }
 
+    @Override
+    public Page<MemberTeamDto> searchPageComplex(MemberSearchCondition condition, Pageable page) {
+        List<MemberTeamDto> content = queryFactory
+                .select(Projections.constructor(
+                        MemberTeamDto.class,
+                        member.id,
+                        member.username,
+                        member.age,
+                        team.id,
+                        team.name))
+                .from(member)
+                .leftJoin(member.team, team)
+                .where(userNameEq(condition.getUsername()),
+                        teamNameEq(condition.getTeamName()),
+                        ageGoe(condition.getAgeGoe()),
+                        ageLoe(condition.getAgeLoe()))
+                .offset(page.getOffset())
+                .limit(page.getPageSize())
+                .fetch();
+
+        JPAQuery<Long> countQuery = queryFactory
+                .select(member.count())
+                .from(member)
+                .leftJoin(member.team, team)
+                .where(userNameEq(condition.getUsername()),
+                        teamNameEq(condition.getTeamName()),
+                        ageGoe(condition.getAgeGoe()),
+                        ageLoe(condition.getAgeLoe()));
+        return PageableExecutionUtils.getPage(content, page, countQuery::fetchOne);
+//        return new PageImpl<>(content, page, total);
+    }
+
     private BooleanExpression userNameEq(String username) {
-        return username.isBlank() ? null : member.username.eq(username);
+        return isBlank(username) ? null : member.username.eq(username);
     }
 
     private BooleanExpression teamNameEq(String teamName) {
-        return teamName.isBlank() ? null : member.team.name.eq(teamName);
+        return isBlank(teamName) ? null : member.team.name.eq(teamName);
     }
 
     private BooleanExpression ageGoe(Integer ageGoe) {

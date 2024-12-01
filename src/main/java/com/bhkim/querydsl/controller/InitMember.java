@@ -1,4 +1,4 @@
-package com.bhkim.controller;
+package com.bhkim.querydsl.controller;
 
 import com.bhkim.querydsl.entity.Member;
 import com.bhkim.querydsl.entity.Team;

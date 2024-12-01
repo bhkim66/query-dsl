@@ -1,25 +1,26 @@
 package com.bhkim.querydsl.repository;
 
+import com.bhkim.querydsl.config.TestQueryDslConfig;
 import com.bhkim.querydsl.dto.MemberSearchCondition;
 import com.bhkim.querydsl.dto.MemberTeamDto;
 import com.bhkim.querydsl.entity.Member;
 import com.bhkim.querydsl.entity.Team;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-class MemberJpaRepositoryTest {
+@Import(TestQueryDslConfig.class)
+class MemberRepositoryTest {
 
     @Autowired
-    MemberJpaRepository repository;
+    MemberRepository repository;
 
     @Autowired
     EntityManager em;
@@ -60,7 +61,8 @@ class MemberJpaRepositoryTest {
     }
 
     @Test
-    void 멤버테스트_where절_파라미터사용() throws Exception {
+    void 멤버_검색_테스트() throws Exception {
+        System.out.println("test");
         //given
         Team teamA = new Team("teamA");
         Team teamB = new Team("teamB");
@@ -80,7 +82,7 @@ class MemberJpaRepositoryTest {
         condition.setAgeLoe(40);
         condition.setTeamName("teamB");
 
-        List<MemberTeamDto> memberTeamDto = repository.searchByBuilder(condition);
+        List<MemberTeamDto> memberTeamDto = repository.search(condition);
 
         assertThat(memberTeamDto).extracting("username").containsExactly("member4");
 
